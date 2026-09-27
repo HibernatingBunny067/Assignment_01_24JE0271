@@ -22,6 +22,8 @@ Assignment_01_24JE0271/
 ## Setup
 
 ```bash
+git clone https://github.com/HibernatingBunny067/Assignment_01_24JE0271.git
+cd Assignment_01_24JE0271
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r REQUIREMENTS.txt
