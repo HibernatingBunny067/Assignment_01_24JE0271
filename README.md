@@ -50,4 +50,8 @@ Compiled report → [`REPORT.pdf`](REPORT.pdf)
 ![Newton convergence](latex_report/figures/newton_convergence.png)
 
 ![RK4 convergence](latex_report/figures/rk4_convergence.png)
+
+![ETA sensitivity](latex_report/figures/eta_inf_study.png)
+
+![Method difference](latex_report/figures/method_difference.png)
 ----
