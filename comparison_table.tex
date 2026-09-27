@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Comparison of the three methods. Benchmark $f''(0) = 1.2325876568$.}
+  \label{tab:comparison}
+  \begin{tabular}{lccccc}
+    \toprule
+    Method & $f''(0)$ & Error & $\delta^*$ & $\theta$ & $H$ \\
+    \midrule
+    \texttt{solve\_bvp} & 1.23258766 & 1.85e-11 & 0.6479 & 0.2923 & 2.2163 \\
+    \texttt{solve\_ivp} + Newton & 1.23258766 & 5.99e-09 & 0.6479 & 0.2923 & 2.2165 \\
+    Scratch RK4 + Newton & 1.23258766 & 8.90e-11 & 0.6479 & 0.2923 & 2.2163 \\
+    \midrule
+    Literature & 1.23258766 & --- & 0.6479 & 0.2923 & 2.216 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
