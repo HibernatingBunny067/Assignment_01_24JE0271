@@ -1,5 +1,5 @@
 # Assignment 01 - Main comparison script
-# Runs all three approaches and produces plots + a LaTeX table
+# Run this from the project root: python main.py
 
 import os
 import numpy as np
@@ -7,11 +7,13 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from solve_bvp_approach import solve_falkner_skan_bvp
-from solve_ivp_newton   import solve_falkner_skan_ivp_newton
-from scratch_rk4_newton import solve_falkner_skan_scratch, boundary_layer_properties
+from src.solve_bvp_approach import solve_falkner_skan_bvp
+from src.solve_ivp_newton   import solve_falkner_skan_ivp_newton
+from src.scratch_rk4_newton import solve_falkner_skan_scratch, boundary_layer_properties
 
-BENCHMARK = 1.232587656817  # f''(0) from Hiemenz / Schlichting
+BENCHMARK  = 1.232587656817
+OUT_DIR    = "latex_report"
+FIG_DIR    = os.path.join(OUT_DIR, "figures")
 
 
 def run_all(eta_max=8.0):
@@ -30,9 +32,9 @@ def run_all(eta_max=8.0):
 
 def print_table(res_bvp, res_ivp, res_scratch):
     rows = [
-        ("solve_bvp",          res_bvp,     res_bvp['n_nodes'],      "nodes"),
-        ("solve_ivp + Newton", res_ivp,     res_ivp['iterations'],   "iters"),
-        ("Scratch RK4 + NR",   res_scratch, res_scratch['iterations'],"iters"),
+        ("solve_bvp",          res_bvp,     res_bvp['n_nodes'],       "nodes"),
+        ("solve_ivp + Newton", res_ivp,     res_ivp['iterations'],    "iters"),
+        ("Scratch RK4 + NR",   res_scratch, res_scratch['iterations'], "iters"),
     ]
 
     print(f"{'Method':<22}{'f\'\'(0)':<16}{'Error':<12}{'Count':<12}{'Time (ms)'}")
@@ -52,7 +54,9 @@ def print_table(res_bvp, res_ivp, res_scratch):
 
 
 def save_latex_table(res_bvp, res_ivp, res_scratch):
-    with open("comparison_table.tex", "w") as f:
+    os.makedirs(OUT_DIR, exist_ok=True)
+    path = os.path.join(OUT_DIR, "comparison_table.tex")
+    with open(path, "w") as f:
         f.write("\\begin{table}[htbp]\n  \\centering\n")
         f.write("  \\caption{Comparison of the three methods. Benchmark $f''(0) = 1.2325876568$.}\n")
         f.write("  \\label{tab:comparison}\n")
@@ -68,16 +72,21 @@ def save_latex_table(res_bvp, res_ivp, res_scratch):
                     f"{res['delta_star']:.4f} & {res['theta']:.4f} & {res['shape_factor']:.4f} \\\\\n")
         f.write(f"    \\midrule\n    Literature & {BENCHMARK:.8f} & --- & 0.6479 & 0.2923 & 2.216 \\\\\n")
         f.write("    \\bottomrule\n  \\end{tabular}\n\\end{table}\n")
-    print("Saved comparison_table.tex")
+    print(f"Saved {path}")
+
+
+def savefig(name):
+    path = os.path.join(FIG_DIR, name)
+    plt.savefig(path, dpi=200)
+    plt.close()
 
 
 def plot_all(res_bvp, res_ivp, res_scratch):
-    os.makedirs("figures", exist_ok=True)
+    os.makedirs(FIG_DIR, exist_ok=True)
     plt.rcParams.update({'font.size': 11, 'font.family': 'serif', 'lines.linewidth': 1.8})
 
     # Figure 1: f, f', f'' profiles
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
-
     for ax, key, ylabel, title in zip(
         axes,
         ['f', 'df', 'd2f'],
@@ -92,20 +101,14 @@ def plot_all(res_bvp, res_ivp, res_scratch):
         ax.set_title(title)
         ax.grid(True, alpha=0.4)
         ax.legend()
-
-    # Extra annotation on velocity plot
     axes[1].axhline(1.0, color='gray', ls='-.', alpha=0.6, label=r"$f'=1$")
     axes[1].axvline(res_scratch['delta_99'], color='purple', ls=':', alpha=0.7,
                     label=rf"$\delta_{{99}}={res_scratch['delta_99']:.2f}$")
     axes[1].legend(fontsize=9)
-
-    # Wall shear annotation on shear plot
     axes[2].scatter([0], [res_scratch['f_double_prime_0']], color='red', zorder=5,
                     label=rf"$f''(0) = {res_scratch['f_double_prime_0']:.4f}$")
     axes[2].legend(fontsize=9)
-
-    plt.savefig("figures/profiles.png", dpi=200)
-    plt.close()
+    savefig("profiles.png")
 
     # Figure 2: Newton-Raphson convergence
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
@@ -116,21 +119,20 @@ def plot_all(res_bvp, res_ivp, res_scratch):
         iters  = [r['iteration'] for r in res['history']]
         resids = [abs(r['residual']) for r in res['history']]
         ax.semilogy(iters, resids, style, label=label)
-    ax.axhline(1e-9, color='k', ls=':', label='tol = 1e-9')
+    ax.axhline(1e-6, color='k', ls=':', label='tol')
     ax.set_xlabel('Iteration')
     ax.set_ylabel(r'$|\Phi(s)|$')
     ax.set_title('Newton-Raphson Convergence')
     ax.legend()
     ax.grid(True, which='both', ls='--', alpha=0.5)
-    plt.savefig("figures/newton_convergence.png", dpi=200)
-    plt.close()
+    savefig("newton_convergence.png")
 
-    # Figure 3: Pointwise difference between methods
+    # Figure 3: Pointwise method difference
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
     eta_grid = np.linspace(0.0, 8.0, 500)
-    df_bvp  = np.interp(eta_grid, res_bvp['eta'],     res_bvp['df'])
-    df_ivp  = np.interp(eta_grid, res_ivp['eta'],     res_ivp['df'])
-    df_sc   = np.interp(eta_grid, res_scratch['eta'], res_scratch['df'])
+    df_bvp = np.interp(eta_grid, res_bvp['eta'],     res_bvp['df'])
+    df_ivp = np.interp(eta_grid, res_ivp['eta'],     res_ivp['df'])
+    df_sc  = np.interp(eta_grid, res_scratch['eta'], res_scratch['df'])
     ax.semilogy(eta_grid, np.abs(df_ivp - df_bvp), 'b-',  label='|IVP - BVP|')
     ax.semilogy(eta_grid, np.abs(df_sc  - df_bvp), 'r--', label='|Scratch - BVP|')
     ax.set_xlabel(r'$\eta$')
@@ -138,10 +140,9 @@ def plot_all(res_bvp, res_ivp, res_scratch):
     ax.set_title("Pointwise Difference in Velocity")
     ax.legend()
     ax.grid(True, which='both', ls='--', alpha=0.5)
-    plt.savefig("figures/method_difference.png", dpi=200)
-    plt.close()
+    savefig("method_difference.png")
 
-    # Figure 4: Effect of eta_inf on f''(0)
+    # Figure 4: eta_inf sensitivity
     print("Running eta_inf sensitivity study...")
     eta_list, bvp_vals, sc_vals = [], [], []
     for e in [3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 10.0, 12.0]:
@@ -152,23 +153,21 @@ def plot_all(res_bvp, res_ivp, res_scratch):
         sc_vals.append(rs['f_double_prime_0'])
 
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
-    ax.plot(eta_list, bvp_vals, 'ko-', label='solve_bvp')
+    ax.plot(eta_list, bvp_vals, 'ko-',  label='solve_bvp')
     ax.plot(eta_list, sc_vals,  'r^--', label='Scratch RK4')
-    ax.axhline(BENCHMARK, color='blue', ls=':', label=f'Benchmark = {BENCHMARK:.6f}')
+    ax.axhline(BENCHMARK, color='blue', ls=':', label='Benchmark')
     ax.set_xlabel(r'$\eta_\infty$')
     ax.set_ylabel(r"$f''(0)$")
     ax.set_title(r'Effect of domain truncation $\eta_\infty$')
     ax.legend()
     ax.grid(True, alpha=0.4)
-    plt.savefig("figures/eta_inf_study.png", dpi=200)
-    plt.close()
+    savefig("eta_inf_study.png")
 
-    # Figure 5: RK4 step size convergence
+    # Figure 5: RK4 order of convergence
     print("Running RK4 h-refinement study...")
-    h_vals  = [0.2, 0.1, 0.05, 0.025, 0.0125]
-    errors  = []
-    ref     = solve_falkner_skan_scratch(eta_max=6.0, h=0.002, s_init=1.23, tol=1e-11)
-    s_ref   = ref['f_double_prime_0']
+    h_vals = [0.2, 0.1, 0.05, 0.025, 0.0125]
+    errors = []
+    s_ref  = solve_falkner_skan_scratch(eta_max=6.0, h=0.002, s_init=1.23, tol=1e-11)['f_double_prime_0']
     for h in h_vals:
         rs = solve_falkner_skan_scratch(eta_max=6.0, h=h, s_init=1.23, tol=1e-10)
         errors.append(max(abs(rs['f_double_prime_0'] - s_ref), 1e-15))
@@ -176,17 +175,16 @@ def plot_all(res_bvp, res_ivp, res_scratch):
     fig, ax = plt.subplots(figsize=(6, 4), constrained_layout=True)
     h_arr  = np.array(h_vals)
     ref_ln = errors[1] * (h_arr / h_vals[1])**4
-    ax.loglog(h_arr, errors,  'rs-',  label='RK4 error in $f\'\'(0)$')
-    ax.loglog(h_arr, ref_ln,  'k--', label=r'$O(h^4)$ reference')
+    ax.loglog(h_arr, errors, 'rs-',  label="RK4 error in $f''(0)$")
+    ax.loglog(h_arr, ref_ln, 'k--', label=r'$O(h^4)$ reference')
     ax.set_xlabel(r'Step size $h$')
-    ax.set_ylabel(r'Error in $f\'\'(0)$')
+    ax.set_ylabel(r"Error in $f''(0)$")
     ax.set_title('RK4 Convergence Rate Verification')
     ax.legend()
     ax.grid(True, which='both', ls='--', alpha=0.5)
-    plt.savefig("figures/rk4_convergence.png", dpi=200)
-    plt.close()
+    savefig("rk4_convergence.png")
 
-    print("All figures saved to figures/")
+    print(f"All figures saved to {FIG_DIR}/")
 
 
 if __name__ == '__main__':
@@ -194,3 +192,4 @@ if __name__ == '__main__':
     print_table(res_bvp, res_ivp, res_scratch)
     save_latex_table(res_bvp, res_ivp, res_scratch)
     plot_all(res_bvp, res_ivp, res_scratch)
+    print(f"\nDone. Upload {OUT_DIR}/ to Overleaf to compile the report.")
