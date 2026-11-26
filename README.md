@@ -15,7 +15,8 @@ All with $f(0)=0$, $f'(0)=0$, $f'(\infty)=1$ for the similarity problems, and $\
 Assignment_01_24JE0271/
 ├── main.py                        ← run this (CLI: falkner-skan | orr-sommerfeld | all)
 ├── REQUIREMENTS.txt
-├── Falkner_Skan_Report.pdf        ← compiled Falkner–Skan report
+├── Falkner_Skan_Report.pdf        ← compiled Falkner–Skan report (Assignment-01)
+├── OS_Report.pdf                  ← compiled Orr-Sommerfeld report (Assignment-02)
 ├── src/
 │   ├── solve_bvp_approach.py      Falkner–Skan, Approach 1: solve_bvp (collocation)
 │   ├── solve_ivp_newton.py        Falkner–Skan, Approach 2: solve_ivp + Newton-Raphson
