@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Blasius base flow: comparison of the three methods ($\eta_\infty = 10$). Benchmark $f''(0) = 0.3320573362$.}
+  \label{tab:blasius}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Method & $f''(0)$ & Error & $\delta_{99}$ & $\delta^*$ & $\theta$ & $H$ \\
+    \midrule
+    \texttt{solve\_bvp} & 0.3320573372 & 1.01e-09 & 4.9101 & 1.7208 & 0.6641 & 2.5912 \\
+    \texttt{solve\_ivp} + Newton & 0.3320573372 & 9.81e-10 & 4.9100 & 1.7208 & 0.6641 & 2.5912 \\
+    Scratch RK4 + Newton & 0.3320573372 & 9.90e-10 & 4.9100 & 1.7208 & 0.6641 & 2.5911 \\
+    \midrule
+    Literature & 0.3320573362 & --- & 4.91 & 1.7208 & 0.6641 & 2.5911 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

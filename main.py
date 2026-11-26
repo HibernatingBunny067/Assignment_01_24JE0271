@@ -1,7 +1,12 @@
-# Assignment 01 - Main comparison script
-# Run this from the project root: python main.py
+# Assignment 01 & 02 - Main script
+# Run this from the project root:
+#   python main.py                      # Falkner-Skan (default, same as before)
+#   python main.py falkner-skan
+#   python main.py orr-sommerfeld [--quick]   # runs Blasius base flow first, then OS
+#   python main.py all
 
 import os
+import argparse
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -12,7 +17,7 @@ from src.solve_ivp_newton   import solve_falkner_skan_ivp_newton
 from src.scratch_rk4_newton import solve_falkner_skan_scratch, boundary_layer_properties
 
 BENCHMARK  = 1.232587656817
-OUT_DIR    = "latex_report"
+OUT_DIR    = os.path.join("latex_report", "Falkner_Skan")
 FIG_DIR    = os.path.join(OUT_DIR, "figures")
 
 
@@ -187,9 +192,27 @@ def plot_all(res_bvp, res_ivp, res_scratch):
     print(f"All figures saved to {FIG_DIR}/")
 
 
-if __name__ == '__main__':
+def run_falkner_skan():
     res_bvp, res_ivp, res_scratch = run_all()
     print_table(res_bvp, res_ivp, res_scratch)
     save_latex_table(res_bvp, res_ivp, res_scratch)
     plot_all(res_bvp, res_ivp, res_scratch)
     print(f"\nDone. Upload {OUT_DIR}/ to Overleaf to compile the report.")
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=r"Falker Skan Boundary Layer, Blausius Boundary Layer and Orr Sommerfeld Equation solvers. ")
+    parser.add_argument('case', nargs='?', default='falkner-skan',
+                        choices=['falkner-skan', 'orr-sommerfeld', 'all'],
+                        help="which case to run (default: falkner-skan)")
+    parser.add_argument('--quick', action='store_true',
+                        help="orr-sommerfeld only: coarser (Re, alpha) grid for a fast check")
+    args = parser.parse_args()
+
+    if args.case in ('falkner-skan', 'all'):
+        print("=" * 30, "Falkner-Skan (stagnation point)", "=" * 30)
+        run_falkner_skan()
+    if args.case in ('orr-sommerfeld', 'all'):
+        from src.orr_sommerfeld_case import run as run_orr_sommerfeld
+        print("=" * 30, "Orr-Sommerfeld (Blasius base flow + stability)", "=" * 30)
+        run_orr_sommerfeld(quick=args.quick)
