@@ -1,4 +1,4 @@
-# Assignment 01 — Boundary-Layer Similarity Solutions & Orr–Sommerfeld Stability
+# Assignment 01 & 02— Boundary-Layer Similarity Solutions & Orr–Sommerfeld Stability
 
 Two cases, both run from one entry point (`main.py`). The Orr–Sommerfeld case always computes its Blasius base flow first.
 
